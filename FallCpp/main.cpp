@@ -2,37 +2,39 @@
 #include <iostream>
 #include <random>
 
-const sf::Vector2f WINDOW_SIZE(800, 600);
+constexpr sf::Vector2f WINDOW_SIZE(1024, 768);
 
 struct Flake {
-    sf::Vector2f position; 
+    sf::Vector2f position;
     sf::Vector2f velocity;
 };
 
 class Fall {
 public:
-    explicit Fall(int amount) {
-        flakes.reserve(amount);
+    explicit Fall(int amount) : vertices(sf::PrimitiveType::Triangles), gen(rd()) {
+        setDensity(amount);
+    }
+
+    void setDensity(int amount) {
+        flakes.resize(amount);
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<float> distX(0, WINDOW_SIZE.x);
         std::uniform_real_distribution<float> distY(0, WINDOW_SIZE.y);
-        std::uniform_real_distribution<float> distVelX(0.0f, 10.0f); 
-        std::uniform_real_distribution<float> distVelY(0.0f, 20.0f); 
+        std::uniform_real_distribution<float> distVelX(0.0f, 10.0f);
+        std::uniform_real_distribution<float> distVelY(0.0f, 20.0f);
 
         for (int i = 0; i < amount; ++i) {
-            flakes.push_back({
-                {distX(gen), distY(gen)}, 
-                {distVelX(gen), distVelY(gen)} 
-                });
+            flakes[i] = { {distX(gen), distY(gen)}, {distVelX(gen), distVelY(gen)} };
         }
     }
 
-    void update(float gravity, float wind, float dt) { 
+    void update(float gravity, float wind, float dt) {
         for (auto& flake : flakes) {
-            flake.position += sf::Vector2f((flake.velocity.x * wind * dt), (flake.velocity.y * gravity * dt));
+            flake.position.x += flake.velocity.x * wind * dt;
+            flake.position.y += flake.velocity.y * gravity * dt;
 
-            if (flake.position.y > WINDOW_SIZE.y)   flake.position.y = 0;       
+            if (flake.position.y > WINDOW_SIZE.y)   flake.position.y = 0;
             if (flake.position.x > WINDOW_SIZE.x)   flake.position.x = 0;
             if (flake.position.x < 0)               flake.position.x = WINDOW_SIZE.x;
             if (flake.position.y < 0)               flake.position.y = WINDOW_SIZE.y;
@@ -40,8 +42,7 @@ public:
     }
 
     void draw(sf::RenderWindow& window, sf::Color color) {
-        const float flakeSize = 3.0f;
-        const size_t verticesPerFlake = 3;
+        constexpr static unsigned short verticesPerFlake = 3;
         sf::VertexArray vertices(sf::PrimitiveType::Triangles, flakes.size() * verticesPerFlake);
 
         for (size_t i = 0; i < flakes.size(); ++i) {
@@ -59,6 +60,10 @@ public:
 
 private:
     std::vector<Flake> flakes;
+    sf::VertexArray vertices;
+    std::random_device rd;
+    std::mt19937 gen;
+    constexpr static float flakeSize = 3.0f;
 };
 
 int main() {
@@ -68,15 +73,15 @@ int main() {
     sf::Clock fpsClock;
     float fps = 0.0f;
 
-    int density = 500 + rand() % 3000;
-	std::cout << "Density: " << density << std::endl;
+    unsigned int density = 500 + rand() % 3000;
+    std::cout << "Density: " << density << std::endl;
     Fall fall(density);
 
-    bool snow       = true;
-    bool rain       = false;
-    bool laser      = false;
-    float wind      = 50.0f;       
-    float gravity   = 15.0f;    
+    bool snow = true;
+    bool rain = false;
+    bool laser = false;
+    float wind = 50.0f;
+    float gravity = 15.0f;
     sf::Color color(150, 150, 150);
 
     while (window.isOpen()) {
@@ -88,52 +93,52 @@ int main() {
             if (event->is<sf::Event::Closed>()) {
                 window.close();
             }
-           
+
 
             else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
                 if (keyPressed->scancode == sf::Keyboard::Scancode::Y) {
                     density += 100;
-					std::cout << "Density up to: " << density << std::endl;
-                    fall = Fall(density);
+                    std::cout << "Density up to: " << density << std::endl;
+                    fall.setDensity(density);
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::T) {
-                    density -= 100;
-					std::cout << "Density down to: " << density << std::endl;
-                    fall = Fall(density);
+                    if (density > 100) density -= 100;
+                    std::cout << "Density down to: " << density << std::endl;
+                    fall.setDensity(density);
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::G) {
                     gravity -= 3.0f;
-					std::cout << "Gravity down to: " << gravity << std::endl;
-				}
+                    std::cout << "Gravity down to: " << gravity << std::endl;
+                }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::H) {
-                    gravity += 3.0f; 
-					std::cout << "Gravity up to: " << gravity << std::endl;
+                    gravity += 3.0f;
+                    std::cout << "Gravity up to: " << gravity << std::endl;
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::B) {
-                    wind -= 3.0f; 
-					std::cout << "Wind down to: " << wind << std::endl;
+                    wind -= 3.0f;
+                    std::cout << "Wind down to: " << wind << std::endl;
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::N) {
-                    wind += 3.0f; 
-					std::cout << "Wind up to: " << wind << std::endl;
+                    wind += 3.0f;
+                    std::cout << "Wind up to: " << wind << std::endl;
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::O) {
-                    wind    = 50.0f;
+                    wind = 50.0f;
                     gravity = 10.0f;
-                    color   = sf::Color(150, 150, 150);
-					std::cout << "Snow Mode" << std::endl;
+                    color = sf::Color(150, 150, 150);
+                    std::cout << "Snow Mode" << std::endl;
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::K) {
-                    wind    = -80.0f;
+                    wind = -80.0f;
                     gravity = 20.0f;
-                    color   = sf::Color(60, 60, 150);
-					std::cout << "Rain Mode" << std::endl;
+                    color = sf::Color(60, 60, 150);
+                    std::cout << "Rain Mode" << std::endl;
                 }
                 if (keyPressed->scancode == sf::Keyboard::Scancode::M) {
-                    wind    = 0.0f;
+                    wind = 0.0f;
                     gravity = -10.0f;
-                    color   = sf::Color(170, 30, 30);
-					std::cout << "Laser Mode" << std::endl;
+                    color = sf::Color(170, 30, 30);
+                    std::cout << "Laser Mode" << std::endl;
                 }
             }
         }
