@@ -24,11 +24,24 @@ https://github.com/user-attachments/assets/a805364b-ad7a-4d6d-8a80-6447570a0545
 ## 🚀 Usage  
 
 - Modify the simulation parameters for different effects.  
-- Adjust **gravity** (affects Y-axis) and **wind** (affects X-axis) to create various particle behaviors.  
-- Customize particle speed for depth effects.  
+- Adjust **gravity** (affects Y-axis) and **wind** (affects X-axis) to create various particle behaviors.
+- Change the RGB color of particles to customize their appearance.
+  
+| Key  | Action |
+|------|--------|
+| **Y** | Increase particle density (+100) |
+| **T** | Decrease particle density (-100) |
+| **H** | Increase gravity (+3.0) |
+| **G** | Decrease gravity (-3.0) |
+| **N** | Increase wind (+3.0) |
+| **B** | Decrease wind (-3.0) |
+| **O** | Activate **Snow Mode** preset (light gray particles, moderate wind & gravity) |
+| **K** | Activate **Rain Mode** preset (blue particles, stronger gravity, negative wind) |
+| **M** | Activate **Laser Mode** preset (red particles, negative gravity, no wind) |
 
 ## 🛠️ Requirements  
 
 - C++17  
 - SFML 3.0+  
-- Visual Studio  
+- Visual Studio
+
